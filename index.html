@@ -136,38 +136,6 @@
   .evo-bar.gasto{background:linear-gradient(180deg, var(--danger), #7a3527);}
   .evo-label{font-size:9.5px; color:var(--ink-dim); white-space:nowrap;}
 
-  /* ===== Saúde do Negócio ===== */
-  .saude-score{display:flex; align-items:center; gap:16px; padding:2px;}
-  .saude-score .selo{
-    width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:26px; flex:0 0 auto; border:2px solid var(--line); background:var(--panel-2);
-  }
-  .saude-score.ok .selo{border-color:var(--ok); background:rgba(76,175,125,.14);}
-  .saude-score.warn .selo{border-color:var(--warn); background:rgba(224,179,77,.14);}
-  .saude-score.danger .selo{border-color:var(--danger); background:rgba(224,101,77,.14);}
-  .saude-score .texto .titulo{font-size:17px; font-weight:700;}
-  .saude-score.ok .texto .titulo{color:var(--ok);}
-  .saude-score.warn .texto .titulo{color:var(--warn);}
-  .saude-score.danger .texto .titulo{color:var(--danger);}
-  .saude-score .texto .sub{font-size:11.5px; color:var(--ink-dim); margin-top:3px; line-height:1.5;}
-
-  .insight-card{
-    display:flex; gap:10px; padding:10px 12px; border-radius:8px; margin-bottom:8px;
-    background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--line);
-  }
-  .insight-card:last-child{margin-bottom:0;}
-  .insight-card.ok{border-left-color:var(--ok);}
-  .insight-card.warn{border-left-color:var(--warn);}
-  .insight-card.danger{border-left-color:var(--danger);}
-  .insight-card .ic-emoji{font-size:15px; flex:0 0 auto; line-height:1.5;}
-  .insight-card .ic-texto{font-size:12.5px; line-height:1.55; color:var(--ink);}
-  .insight-card .ic-texto b{color:var(--ink);}
-
-  .mes-atual-tag{
-    font-size:9.5px; color:var(--accent); border:1px solid var(--accent-dim); border-radius:4px;
-    padding:1px 5px; margin-left:6px; white-space:nowrap;
-  }
-
   details.mini-summary{
     background:var(--panel); border:1px solid var(--line); border-radius:10px;
     padding:10px 14px; margin-top:4px;
@@ -711,7 +679,6 @@
   <div class="tabs-nav">
     <button class="tab-btn active" id="tabBtnCortes" onclick="mudarAba('cortes')">📐 Infesto e Corte</button>
     <button class="tab-btn" id="tabBtnRelatorios" onclick="mudarAba('relatorios')">📊 Relatórios e Indicadores</button>
-    <button class="tab-btn" id="tabBtnSaude" onclick="mudarAba('saude')">🩺 Saúde do Negócio</button>
   </div>
 
   <div id="viewCortes">
@@ -1126,66 +1093,6 @@
 
   </div><!-- /viewRelatorios -->
 
-  <div id="viewSaude" style="display:none;">
-
-    <div class="panel" style="margin-bottom:14px;">
-      <h2><span class="n">►</span> Saúde do Negócio</h2>
-      <p class="help-text" style="margin:0 0 4px;">
-        Diagnóstico calculado automaticamente a partir do histórico real de cortes e gastos cadastrados no sistema.
-        Atualiza sozinho toda vez que você lança um corte, um gasto, ou sincroniza com outro aparelho — não é uma
-        estimativa, são os seus números mesmo.
-      </p>
-      <div class="cad-empty" id="saudeSemDados" style="display:none; margin-top:10px;">
-        Ainda não há cortes ou gastos com data preenchida suficientes para calcular a saúde do negócio.
-        Registre cortes (com valor) e gastos com data para o diagnóstico aparecer aqui.
-      </div>
-    </div>
-
-    <div id="saudeConteudo" style="display:none;">
-
-      <div class="panel" style="margin-bottom:14px;">
-        <div class="saude-score ok" id="saudeScoreBox">
-          <div class="selo" id="saudeScoreSelo">💚</div>
-          <div class="texto">
-            <div class="titulo" id="saudeScoreTitulo">Saudável</div>
-            <div class="sub" id="saudeScoreSub">-</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-bottom:14px;">
-        <h2><span class="n">►</span> O que os números dizem</h2>
-        <div id="saudeInsights"></div>
-      </div>
-
-      <div class="panel" style="margin-bottom:14px;">
-        <h2><span class="n">►</span> Mão de obra: % da receita, mês a mês</h2>
-        <p class="help-text" style="margin:0 0 14px;">
-          Gastos lançados na categoria <b>"Mão de obra"</b> em cada mês, divididos pela receita do mesmo mês.
-          Quanto mais alta a barra, maior a fatia da receita que a mão de obra está consumindo naquele mês —
-          é assim que dá pra ver se ela está aumentando ou diminuindo com o tempo.
-        </p>
-        <div class="evo-chart" id="saudeMoChart"></div>
-      </div>
-
-      <div class="panel">
-        <h2><span class="n">►</span> Evolução mensal completa</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Mês</th><th>Receita</th><th>Gastos</th><th>Mão de obra</th>
-                <th>M.O. % receita</th><th>Lucro</th><th>Margem</th>
-              </tr>
-            </thead>
-            <tbody id="saudeMesesTbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-  </div><!-- /viewSaude -->
-
 
 </main>
 
@@ -1397,25 +1304,12 @@
           <li><b>status</b> — escreva exatamente <code>ativo</code>.</li>
           <li><b>papel</b> — escreva <code>admin</code> para acesso completo (inclusive a função "Google
             Sheets/Drive"), ou <code>usuario</code> para acesso normal, sem essa função.</li>
-          <li><b>limite</b> — quantos <b>aparelhos diferentes</b> podem estar logados com esse mesmo
-            usuário/senha <b>ao mesmo tempo</b>, no mesmo dia. Ex: <code>2</code> permite até 2 celulares/tablets
-            usando esse login ao mesmo tempo; o 3º aparelho que tentar entrar é recusado até que um dos dois pare
-            de usar. Deixe em branco (ou <code>0</code>) para não ter limite nenhum.</li>
           <li><b>nome</b> — nome da pessoa, só pra você identificar (opcional).</li>
         </ul>
         <p class="help-text">
           As colunas <code>criadoEm</code> e <code>ultimoAcesso</code> não precisam ser preenchidas por você — a
           coluna <code>ultimoAcesso</code> é atualizada sozinha pelo sistema a cada login bem-sucedido, pra você
           acompanhar quem andou usando e quando.
-        </p>
-        <h4>Como funciona o limite de aparelhos</h4>
-        <p>
-          Cada aparelho (celular, tablet, computador) gera sozinho um identificador único na primeira vez que abre
-          o sistema, e manda esse identificador junto com o login. O script guarda automaticamente, numa aba
-          própria chamada <b>"Sessoes_Dispositivos"</b> (você não precisa mexer nela), quais aparelhos usaram cada
-          login <b>hoje</b>. Um aparelho que já usou aquele login hoje sempre pode entrar de novo; um aparelho novo
-          só entra se ainda não tiver batido no número definido em <code>limite</code>. No dia seguinte, a "vaga"
-          libera sozinha — cada aparelho pede login de novo, do jeito que o sistema já funciona hoje.
         </p>
         <h4>Como bloquear uma pessoa</h4>
         <p>
@@ -1793,9 +1687,15 @@ const STORAGE_KEY = 'controle_infesto_corte_v1';
 const CATALOGO_KEY = 'controle_infesto_catalogos_v1';
 const CLIENTES_KEY = 'controle_infesto_clientes_v1';
 const CONFIG_GOOGLE_KEY = 'controle_infesto_config_google_v1';
+// URL padrão do Google Apps Script (Web App) já publicada com este sistema.
+// Preencha aqui a URL "https://script.google.com/macros/s/AKfycb.../exec" que você
+// gerou ao publicar o Apps Script. Assim, qualquer pessoa que abrir o link do
+// GitHub já entra com o Google Sheet configurado, sem precisar fazer isso na mão.
+// Se o usuário configurar uma URL diferente pelo menu (⚙), a dele passa a valer
+// nesse navegador (fica salva no localStorage e tem prioridade sobre esta aqui).
+const DEFAULT_GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbyePrJncdgBXv1dRdUv87NpO3kaE3-Bg7iKTOTj80Z-riBvA_BYucVf9wKFwN6wM5Ja/exec';
 const GASTOS_KEY = 'controle_infesto_gastos_v1';
 const AUTH_KEY = 'controle_infesto_auth_v1';
-const DEVICE_ID_KEY = 'controle_infesto_device_id_v1';
 const CATEGORIAS_GASTO = ['Tecido/Insumos','Mão de obra','Aluguel/Estrutura','Manutenção/Equipamento','Transporte','Impostos/Taxas','Outros'];
 let cortes = [];
 let clientes = [];
@@ -3390,22 +3290,15 @@ function renderStats(){
 function mudarAba(nome){
   const viewCortes = document.getElementById('viewCortes');
   const viewRel = document.getElementById('viewRelatorios');
-  const viewSaude = document.getElementById('viewSaude');
   document.getElementById('tabBtnCortes').classList.remove('active');
   document.getElementById('tabBtnRelatorios').classList.remove('active');
-  document.getElementById('tabBtnSaude').classList.remove('active');
-  viewCortes.style.display = 'none';
-  viewRel.style.display = 'none';
-  viewSaude.style.display = 'none';
   if(nome === 'relatorios'){
+    viewCortes.style.display = 'none';
     viewRel.style.display = 'block';
     document.getElementById('tabBtnRelatorios').classList.add('active');
     renderRelatorios();
-  } else if(nome === 'saude'){
-    viewSaude.style.display = 'block';
-    document.getElementById('tabBtnSaude').classList.add('active');
-    renderSaudeNegocio();
   } else {
+    viewRel.style.display = 'none';
     viewCortes.style.display = 'block';
     document.getElementById('tabBtnCortes').classList.add('active');
   }
@@ -3687,11 +3580,6 @@ function renderRelatorios(){
         `;
       }).join('');
   }
-
-  /* ---------------- Saúde do Negócio (aba própria, usa o histórico inteiro) ----------------
-     Chamada aqui pra ficar sempre atualizada junto com os Relatórios, sem precisar mexer em
-     cada lugar do sistema que salva um corte/gasto/sincroniza — basta este único ponto. */
-  renderSaudeNegocio();
 }
 
 // Monta o gráfico de barras (receita × gastos) agrupado por dia (períodos curtos)
@@ -3763,263 +3651,6 @@ function renderGraficoEvolucao(listaCortes, listaGastos){
 function escapeHtml(str){
   if(!str) return '';
   return str.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-function fmtMoeda(v){
-  return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
-}
-
-/* ===================== SAÚDE DO NEGÓCIO ===================== */
-// Tudo aqui é calculado em cima do histórico REAL de `cortes` e `gastos` (as mesmas
-// variáveis globais usadas no resto do sistema) — nada é inventado ou estimado.
-// Agrupa por mês (AAAA-MM), monta a tabela de evolução, o gráfico de mão de obra e as
-// dicas automáticas, comparando o mês mais recente FECHADO com o mês anterior. O mês
-// corrente (em andamento) entra na tabela pra referência, mas não entra nas comparações
-// de tendência, pra não comparar um mês pela metade com um mês inteiro.
-const NOMES_MESES_SAUDE = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-function saudeChaveMes(dataISO){ return dataISO ? String(dataISO).slice(0,7) : null; }
-function saudeNomeMes(chave){
-  const [ano, mes] = chave.split('-');
-  return NOMES_MESES_SAUDE[Number(mes)-1] + '/' + ano;
-}
-
-function renderSaudeNegocio(){
-  const semDadosEl = document.getElementById('saudeSemDados');
-  const conteudoEl = document.getElementById('saudeConteudo');
-  if(!semDadosEl || !conteudoEl) return; // aba ainda não está no DOM (segurança)
-
-  /* ---------------- Agrupamento mensal com TODO o histórico ---------------- */
-  const buckets = {};
-  cortes.forEach(c=>{
-    const k = saudeChaveMes(c.data);
-    if(!k) return;
-    if(!buckets[k]) buckets[k] = { chave:k, receita:0, gastos:0, mo:0, cortes:0 };
-    buckets[k].receita += Number(c.total||0);
-    buckets[k].cortes++;
-  });
-  gastos.forEach(g=>{
-    const k = saudeChaveMes(g.data);
-    if(!k) return;
-    if(!buckets[k]) buckets[k] = { chave:k, receita:0, gastos:0, mo:0, cortes:0 };
-    buckets[k].gastos += Number(g.valor||0);
-    if((g.categoria||'') === 'Mão de obra') buckets[k].mo += Number(g.valor||0);
-  });
-
-  const chaves = Object.keys(buckets).sort();
-  if(chaves.length === 0){
-    semDadosEl.style.display = 'block';
-    conteudoEl.style.display = 'none';
-    return;
-  }
-  semDadosEl.style.display = 'none';
-  conteudoEl.style.display = 'block';
-
-  const meses = chaves.map(k=>{
-    const b = buckets[k];
-    const lucro = b.receita - b.gastos;
-    const margem = b.receita > 0 ? (lucro / b.receita) * 100 : (b.gastos > 0 ? -100 : 0);
-    const moPct = b.receita > 0 ? (b.mo / b.receita) * 100 : 0;
-    return { ...b, lucro, margem, moPct };
-  });
-
-  const hojeChave = saudeChaveMes(new Date().toISOString().slice(0,10));
-  const mesesFechados = meses.filter(m => m.chave !== hojeChave);
-  const baseComparacao = mesesFechados.length ? mesesFechados : meses;
-  const ultimo = baseComparacao[baseComparacao.length - 1];
-  const penultimo = baseComparacao.length > 1 ? baseComparacao[baseComparacao.length - 2] : null;
-
-  // Meses seguidos de prejuízo, contando de trás pra frente a partir do mês mais recente fechado
-  let mesesPrejuizoSeguidos = 0;
-  for(let i = baseComparacao.length - 1; i >= 0; i--){
-    if(baseComparacao[i].lucro < 0) mesesPrejuizoSeguidos++;
-    else break;
-  }
-
-  /* ---------------- Selo geral de saúde ---------------- */
-  let pontos = 0;
-  if(ultimo.margem >= 20) pontos += 2;
-  else if(ultimo.margem >= 0) pontos += 1;
-  else pontos -= 2;
-  if(penultimo){
-    pontos += (ultimo.lucro >= penultimo.lucro) ? 1 : -1;
-    if(penultimo.receita > 0 && ultimo.moPct - penultimo.moPct > 5) pontos -= 1;
-  }
-  if(mesesPrejuizoSeguidos >= 2) pontos -= 2;
-
-  const statusGeral = pontos >= 2 ? 'ok' : (pontos >= 0 ? 'warn' : 'danger');
-  const mapaStatus = {
-    ok: { emoji:'💚', titulo:'Saudável', sub:`Com base no histórico até ${saudeNomeMes(ultimo.chave)}, a margem está boa e os sinais são positivos. Continue de olho nas dicas abaixo.` },
-    warn: { emoji:'💛', titulo:'Atenção', sub:`Alguns pontos merecem atenção — veja as dicas abaixo pra entender o que está pesando.` },
-    danger: { emoji:'❤️‍🩹', titulo:'Crítico', sub:`A situação financeira pede ação — veja as dicas abaixo pra entender o que precisa mudar.` }
-  };
-  const infoStatus = mapaStatus[statusGeral];
-  const scoreBox = document.getElementById('saudeScoreBox');
-  scoreBox.classList.remove('ok','warn','danger');
-  scoreBox.classList.add(statusGeral);
-  document.getElementById('saudeScoreSelo').textContent = infoStatus.emoji;
-  document.getElementById('saudeScoreTitulo').textContent = infoStatus.titulo;
-  document.getElementById('saudeScoreSub').textContent = infoStatus.sub;
-
-  /* ---------------- Dicas automáticas (baseadas nos números reais acima) ---------------- */
-  const insights = [];
-
-  // Lucro do mês mais recente fechado
-  insights.push({
-    tipo: ultimo.lucro >= 0 ? (ultimo.margem >= 20 ? 'ok' : 'warn') : 'danger',
-    emoji: ultimo.lucro >= 0 ? (ultimo.margem >= 20 ? '✅' : '⚠️') : '🚨',
-    texto: `Em <b>${saudeNomeMes(ultimo.chave)}</b>, o lucro líquido foi de <b>R$ ${fmtMoeda(ultimo.lucro)}</b>, com margem de <b>${ultimo.margem.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b> sobre a receita.`
-  });
-
-  // Meses seguidos de prejuízo (alerta prioritário)
-  if(mesesPrejuizoSeguidos >= 2){
-    insights.push({
-      tipo:'danger', emoji:'🚨',
-      texto:`Já são <b>${mesesPrejuizoSeguidos} meses seguidos</b> fechando no prejuízo. Vale revisar preços e gastos com urgência.`
-    });
-  }
-
-  // Receita: comparação com o mês anterior
-  if(penultimo){
-    const variacaoReceita = penultimo.receita > 0
-      ? ((ultimo.receita - penultimo.receita) / penultimo.receita) * 100
-      : (ultimo.receita > 0 ? 100 : 0);
-    let tipoRec, emojiRec;
-    if(variacaoReceita >= 5){ tipoRec='ok'; emojiRec='📈'; }
-    else if(variacaoReceita <= -15){ tipoRec='danger'; emojiRec='📉'; }
-    else if(variacaoReceita < 0){ tipoRec='warn'; emojiRec='📉'; }
-    else { tipoRec='ok'; emojiRec='➡️'; }
-    insights.push({
-      tipo: tipoRec, emoji: emojiRec,
-      texto:`A receita ${variacaoReceita>=0?'subiu':'caiu'} <b>${Math.abs(variacaoReceita).toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b> de ${saudeNomeMes(penultimo.chave)} (R$ ${fmtMoeda(penultimo.receita)}) para ${saudeNomeMes(ultimo.chave)} (R$ ${fmtMoeda(ultimo.receita)}).`
-    });
-  }
-
-  // Mão de obra: valor e tendência em % da receita — o pedido central desta aba
-  const totalMoHistorico = meses.reduce((s,m)=> s + m.mo, 0);
-  if(totalMoHistorico === 0){
-    insights.push({
-      tipo:'warn', emoji:'ℹ️',
-      texto:`Nenhum gasto foi lançado até agora na categoria <b>"Mão de obra"</b>. Lance esses gastos na aba Relatórios (categoria "Mão de obra") pra este painel acompanhar o peso da mão de obra na receita.`
-    });
-  } else if(ultimo.receita > 0){
-    let tipoMo, emojiMo, complemento = '';
-    if(penultimo && penultimo.receita > 0){
-      const deltaMoPct = ultimo.moPct - penultimo.moPct;
-      complemento = ` — ${deltaMoPct>=0?'subiu':'caiu'} ${Math.abs(deltaMoPct).toLocaleString('pt-BR',{maximumFractionDigits:1})} ponto(s) percentual(is) em relação a ${saudeNomeMes(penultimo.chave)}`;
-      if(deltaMoPct > 3){ tipoMo='warn'; emojiMo='⚠️'; }
-      else if(deltaMoPct < -3){ tipoMo='ok'; emojiMo='✅'; }
-      else { tipoMo='ok'; emojiMo='➡️'; }
-    } else {
-      tipoMo = ultimo.moPct > 35 ? 'warn' : 'ok';
-      emojiMo = ultimo.moPct > 35 ? '⚠️' : '➡️';
-    }
-    if(ultimo.moPct > 45){ tipoMo='danger'; emojiMo='🚨'; }
-    insights.push({
-      tipo: tipoMo, emoji: emojiMo,
-      texto:`A mão de obra consumiu <b>${ultimo.moPct.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b> da receita em ${saudeNomeMes(ultimo.chave)}${complemento}.`
-    });
-  }
-
-  // Ticket médio por corte
-  if(penultimo && ultimo.cortes > 0 && penultimo.cortes > 0){
-    const ticketUlt = ultimo.receita / ultimo.cortes;
-    const ticketPen = penultimo.receita / penultimo.cortes;
-    const varTicket = ticketPen > 0 ? ((ticketUlt - ticketPen) / ticketPen) * 100 : 0;
-    if(Math.abs(varTicket) >= 5){
-      insights.push({
-        tipo: varTicket >= 0 ? 'ok' : 'warn',
-        emoji: varTicket >= 0 ? '✅' : '⚠️',
-        texto:`O ticket médio por corte ${varTicket>=0?'subiu':'caiu'} de R$ ${fmtMoeda(ticketPen)} para R$ ${fmtMoeda(ticketUlt)} (${varTicket>=0?'+':''}${varTicket.toLocaleString('pt-BR',{maximumFractionDigits:1})}%).`
-      });
-    }
-  }
-
-  // Concentração de faturamento em um único cliente (histórico completo)
-  const totalFatHistorico = cortes.reduce((s,c)=> s + Number(c.total||0), 0);
-  if(totalFatHistorico > 0){
-    const porCliente = {};
-    cortes.forEach(c=>{
-      const clienteRef = c.clienteId ? clientes.find(cl=>cl.id===c.clienteId) : null;
-      const nome = clienteRef ? clienteRef.nome : 'Sem cliente definido';
-      porCliente[nome] = (porCliente[nome]||0) + Number(c.total||0);
-    });
-    const topCliente = Object.entries(porCliente).sort((a,b)=> b[1]-a[1])[0];
-    if(topCliente){
-      const pctTop = (topCliente[1] / totalFatHistorico) * 100;
-      if(pctTop >= 40){
-        insights.push({
-          tipo: pctTop >= 60 ? 'danger' : 'warn', emoji:'⚠️',
-          texto:`O cliente <b>${escapeHtml(topCliente[0])}</b> representa <b>${pctTop.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b> de todo o faturamento histórico. Depender tanto de um único cliente é um risco — vale diversificar a carteira.`
-        });
-      }
-    }
-  }
-
-  // Pouco histórico ainda: avisa que as tendências vão ficar mais confiáveis com o tempo
-  if(baseComparacao.length < 2){
-    insights.push({
-      tipo:'warn', emoji:'ℹ️',
-      texto:`Ainda há pouco histórico fechado (só ${baseComparacao.length} mês). As comparações de tendência (mês a mês) vão ficar mais confiáveis conforme mais meses forem se fechando.`
-    });
-  }
-
-  const ordemSeveridade = { danger:0, warn:1, ok:2 };
-  insights.sort((a,b)=> ordemSeveridade[a.tipo] - ordemSeveridade[b.tipo]);
-
-  const insightsEl = document.getElementById('saudeInsights');
-  insightsEl.innerHTML = insights.map(i => `
-    <div class="insight-card ${i.tipo}">
-      <div class="ic-emoji">${i.emoji}</div>
-      <div class="ic-texto">${i.texto}</div>
-    </div>
-  `).join('');
-
-  /* ---------------- Gráfico: mão de obra em % da receita, mês a mês ---------------- */
-  renderGraficoMaoDeObra(meses, hojeChave);
-
-  /* ---------------- Tabela: evolução mensal completa ---------------- */
-  const tbody = document.getElementById('saudeMesesTbody');
-  tbody.innerHTML = meses.map(m=>{
-    const tagAtual = m.chave === hojeChave ? '<span class="mes-atual-tag">em andamento</span>' : '';
-    const corLucro = m.lucro >= 0 ? 'var(--ok)' : 'var(--danger)';
-    return `
-      <tr>
-        <td><b>${saudeNomeMes(m.chave)}</b>${tagAtual}</td>
-        <td>R$ ${fmtMoeda(m.receita)}</td>
-        <td>R$ ${fmtMoeda(m.gastos)}</td>
-        <td>R$ ${fmtMoeda(m.mo)}</td>
-        <td>${m.receita>0 ? m.moPct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%' : '-'}</td>
-        <td style="color:${corLucro}; font-weight:700;">R$ ${fmtMoeda(m.lucro)}</td>
-        <td style="color:${corLucro};">${m.receita>0 ? m.margem.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%' : '-'}</td>
-      </tr>
-    `;
-  }).join('');
-}
-
-// Barra por mês representando o % da receita consumido pela mão de obra — mesma
-// linguagem visual do gráfico de evolução dos Relatórios (barras CSS, sem libs externas).
-function renderGraficoMaoDeObra(meses, hojeChave){
-  const el = document.getElementById('saudeMoChart');
-  if(!el) return;
-  if(meses.length === 0){
-    el.innerHTML = '<div class="cad-empty">Sem histórico suficiente ainda.</div>';
-    return;
-  }
-  el.innerHTML = meses.map(m=>{
-    const pct = Math.min(m.moPct, 100);
-    const altura = Math.max(pct > 0 ? 3 : 0, Math.round((pct/100) * 120));
-    const cor = m.moPct >= 40 ? 'var(--danger)' : (m.moPct >= 25 ? 'var(--warn)' : 'var(--ok)');
-    const tituloBarra = `${saudeNomeMes(m.chave)}: ${m.moPct.toLocaleString('pt-BR',{maximumFractionDigits:1})}% da receita em mão de obra (R$ ${fmtMoeda(m.mo)})`;
-    const tagAtual = m.chave === hojeChave ? ' *' : '';
-    return `
-      <div class="evo-col">
-        <div class="evo-bars" style="height:120px;">
-          <div class="evo-bar" style="height:${altura}px; width:20px; background:${cor};" title="${tituloBarra}"></div>
-        </div>
-        <div class="evo-label">${saudeNomeMes(m.chave)}${tagAtual}</div>
-      </div>
-    `;
-  }).join('');
 }
 
 function abrirModal(src, name, type){
@@ -4149,8 +3780,13 @@ function importBackup(event){
 function carregarConfigGoogle(){
   try{
     const raw = localStorage.getItem(CONFIG_GOOGLE_KEY);
-    configGoogle = raw ? JSON.parse(raw) : { url: '' };
-  }catch(e){ configGoogle = { url: '' }; }
+    configGoogle = raw ? JSON.parse(raw) : { url: DEFAULT_GOOGLE_URL || '' };
+    // Se nunca foi salvo nada neste navegador mas existe uma URL padrão embutida
+    // no arquivo, usa ela automaticamente (sem precisar configurar na mão).
+    if(!configGoogle.url && DEFAULT_GOOGLE_URL){
+      configGoogle = { url: DEFAULT_GOOGLE_URL };
+    }
+  }catch(e){ configGoogle = { url: DEFAULT_GOOGLE_URL || '' }; }
   atualizarStatusSyncUI();
 }
 
@@ -4338,25 +3974,6 @@ async function sincronizarTodosAparelhos(){
  * dia seguinte, pede login de novo. Se o administrador marcar o usuário como
  * "bloqueado" na planilha, o próximo login (do dia seguinte) é recusado.
  */
-// Identificador único e permanente deste aparelho/navegador (gerado uma vez e guardado
-// no localStorage). Serve pra o backend (Google Apps Script) conseguir distinguir "o
-// mesmo usuário logando em aparelhos diferentes" de "o mesmo aparelho logando de novo" —
-// pré-requisito pra controlar quantos aparelhos podem usar o mesmo usuário/senha ao
-// mesmo tempo. Só mandar esse ID já é seguro mesmo antes do Apps Script usá-lo: ele é só
-// mais um campo no corpo da requisição, que scripts antigos simplesmente ignoram.
-function obterDeviceId(){
-  try{
-    let id = localStorage.getItem(DEVICE_ID_KEY);
-    if(!id){
-      id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : ('dev-' + Date.now() + '-' + Math.random().toString(16).slice(2));
-      localStorage.setItem(DEVICE_ID_KEY, id);
-    }
-    return id;
-  }catch(e){
-    return 'dev-desconhecido';
-  }
-}
-
 function hojeStrAuth(){
   return new Date().toISOString().slice(0,10);
 }
@@ -4432,7 +4049,7 @@ async function tentarLogin(){
     const resp = await fetch(configGoogle.url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ acao: 'login', usuario, senha, dispositivo: obterDeviceId() })
+      body: JSON.stringify({ acao: 'login', usuario, senha })
     });
     const resultado = await resp.json();
 
@@ -4445,8 +4062,6 @@ async function tentarLogin(){
       mostrarToast('Bem-vindo(a), ' + (resultado.nome || usuario) + '!');
     } else if(resultado && resultado.motivo === 'bloqueado'){
       erroEl.textContent = 'Acesso bloqueado. Fale com o responsável pelo sistema.';
-    } else if(resultado && resultado.motivo === 'limite'){
-      erroEl.textContent = 'Limite de aparelhos conectados com esse usuário foi atingido. Fale com o administrador.';
     } else {
       erroEl.textContent = (resultado && resultado.mensagem) || 'Usuário ou senha incorretos.';
     }
