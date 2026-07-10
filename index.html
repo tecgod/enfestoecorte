@@ -682,6 +682,7 @@
       <span class="sync-dot" id="syncDot"></span>
       <span id="syncStatusText">Google não configurado</span>
     </div>
+    <span class="sync-status" id="usuarioLogadoLabel" title="Usuário logado neste aparelho" style="display:none;">👤 <b id="usuarioLogadoNome"></b></span>
     <button class="btn" id="btnSyncAll" onclick="sincronizarTodosAparelhos()" title="Envia o que você digitou neste aparelho e baixa as atualizações feitas em outros aparelhos">🔄 Sincronizar todos aparelhos</button>
     <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importBackup(event)">
     <div class="settings-wrap">
@@ -1380,11 +1381,15 @@
       <summary>🔐 Controle de acesso — liberar ou bloquear quem usa o sistema</summary>
       <div class="details-help-body">
         <p>
-          O sistema exige login (usuário e senha) pelo menos uma vez por dia, em cada aparelho. Quem pode entrar
+          O sistema exige login (usuário e senha) pelo menos uma vez por dia, em cada aparelho — e, com internet
+          disponível, revalida essa sessão junto ao Google toda vez que o sistema é reaberto (veja mais abaixo).
+          Quem pode entrar
           é definido por você, direto numa aba chamada <b>"Usuários"</b>, criada automaticamente na mesma
           planilha do Google usada na sincronização (a mesma URL configurada acima), assim que a primeira
           tentativa de login acontecer. Cada pessoa também tem um <b>papel</b>: <code>admin</code> (acesso
-          completo) ou <code>usuario</code> (acesso normal, sem a função "Google Sheets/Drive").
+          completo), <code>usuario</code> (acesso normal, sem a função "Google Sheets/Drive") ou
+          <code>leitura</code> (só pode visualizar os dados já cadastrados — não consegue salvar, editar,
+          excluir ou importar nada).
         </p>
         <h4>Como liberar uma pessoa</h4>
         <p>
@@ -1396,7 +1401,10 @@
           <li><b>senha</b> — a senha dela.</li>
           <li><b>status</b> — escreva exatamente <code>ativo</code>.</li>
           <li><b>papel</b> — escreva <code>admin</code> para acesso completo (inclusive a função "Google
-            Sheets/Drive"), ou <code>usuario</code> para acesso normal, sem essa função.</li>
+            Sheets/Drive"), <code>usuario</code> para acesso normal (sem essa função), ou
+            <code>leitura</code> para acesso somente de visualização (a pessoa entra, vê cortes, clientes,
+            relatórios e gastos já cadastrados, mas qualquer tentativa de salvar, editar, excluir ou importar
+            dados é bloqueada com um aviso na tela).</li>
           <li><b>limite</b> — quantos <b>aparelhos diferentes</b> podem estar logados com esse mesmo
             usuário/senha <b>ao mesmo tempo</b>, no mesmo dia. Ex: <code>2</code> permite até 2 celulares/tablets
             usando esse login ao mesmo tempo; o 3º aparelho que tentar entrar é recusado até que um dos dois pare
@@ -1407,6 +1415,15 @@
           As colunas <code>criadoEm</code> e <code>ultimoAcesso</code> não precisam ser preenchidas por você — a
           coluna <code>ultimoAcesso</code> é atualizada sozinha pelo sistema a cada login bem-sucedido, pra você
           acompanhar quem andou usando e quando.
+        </p>
+        <h4>O que o papel "leitura" pode e não pode fazer</h4>
+        <p>
+          Quem entra com papel <code>leitura</code> vê o sistema normalmente — telas, listas de cortes,
+          clientes, relatórios e gastos já cadastrados aparecem do mesmo jeito. A diferença é só na hora de
+          gravar algo: se a pessoa tentar salvar um corte novo, editar/excluir um corte, cliente ou gasto, ou
+          cadastrar/remover um tecido ou nuance, ou importar um backup, o sistema mostra o aviso
+          <i>"Seu acesso é somente leitura"</i> e não salva nada. Não é preciso mudar mais nada na planilha além
+          do <code>papel</code> dessa pessoa.
         </p>
         <h4>Como funciona o limite de aparelhos</h4>
         <p>
@@ -1421,8 +1438,23 @@
         <p>
           Na mesma aba, mude o <b>status</b> daquela linha de <code>ativo</code> para <code>bloqueado</code> (ou
           qualquer outra palavra — só <code>ativo</code> libera acesso). Não precisa apagar a linha nem mudar a
-          senha. A pessoa continua com acesso até a sessão do dia dela expirar; no login seguinte, é recusado
-          automaticamente.
+          senha. O sistema confere isso com o Google toda vez que é aberto (não só uma vez por dia), então o
+          bloqueio passa a valer quase na hora, mesmo que a pessoa já estivesse com o sistema aberto.
+        </p>
+        <h4>Revalidação automática da sessão</h4>
+        <p>
+          Toda vez que o sistema é aberto num aparelho que já tinha feito login antes, ele confirma com o Google,
+          em segundo plano, se aquela sessão ainda é válida (usuário não bloqueado, papel atual, e dentro do
+          limite de aparelhos simultâneos) — em vez de simplesmente confiar no que já estava salvo no navegador o
+          dia inteiro. Se algo mudou (por exemplo, você bloqueou a pessoa ou o limite de aparelhos foi atingido em
+          outro aparelho), o acesso é encerrado ali mesmo e a tela de login aparece de novo. Isso exige uma conexão
+          com a internet a cada abertura do sistema; se não houver internet no momento, o sistema mantém a sessão
+          que já estava aberta (pra não travar o uso), e a conferência volta a valer normalmente assim que a
+          conexão for restabelecida.
+        </p>
+        <p class="help-text">
+          Para você conferir com quem está logado em cada aparelho, o nome do usuário aparece no topo da tela,
+          ao lado do status de sincronização (ex: "👤 a6").
         </p>
         <p class="help-text">
           A aba "Usuários" é criada apenas uma vez e o sistema nunca apaga ou reescreve as linhas dela sozinho —
@@ -1850,6 +1882,9 @@ let catalogos = { tecidos: [], nuances: [] };
 // cadastro rápido pelo botão "+", pra saber pra qual campo avançar o foco ao fechar.
 let catalogoOrigemSelectId = null;
 let configGoogle = { url: '' };
+// Papel da pessoa logada neste aparelho ('admin', 'usuario' ou 'leitura'), definido em
+// aplicarPermissoesUI(). Usado pelas travas de somente-leitura abaixo.
+let papelAtual = null;
 let corteSelecionados = new Set();
 let listaFiltradaAtual = [];
 
@@ -2034,6 +2069,7 @@ function fecharModalGasto(){
 }
 
 function salvarGastoModal(){
+  if(bloquearSeSomenteLeitura()) return;
   const data = document.getElementById('gData').value;
   const categoria = document.getElementById('gCategoria').value;
   const descricao = document.getElementById('gDescricao').value.trim();
@@ -2063,6 +2099,7 @@ function salvarGastoModal(){
 }
 
 function excluirGasto(id){
+  if(bloquearSeSomenteLeitura()) return;
   if(!confirm('Excluir este gasto? Essa ação não pode ser desfeita.')) return;
   gastos = gastos.filter(g=>g.id!==id);
   salvarGastosStorage();
@@ -2097,6 +2134,7 @@ function fecharModalCliente(){
 }
 
 function salvarClienteModal(){
+  if(bloquearSeSomenteLeitura()) return;
   const nome = document.getElementById('clNome').value.trim();
   const responsavel = document.getElementById('clResponsavel').value.trim();
   const whatsapp = document.getElementById('clWhatsapp').value.trim();
@@ -2173,6 +2211,7 @@ function renderListaGerenciarClientes(){
 }
 
 function excluirCliente(id){
+  if(bloquearSeSomenteLeitura()) return;
   const cli = clientes.find(c=>c.id===id);
   if(!cli) return;
   const qtdCortes = cortes.filter(c=>c.clienteId===id).length;
@@ -2334,6 +2373,7 @@ function renderListaCadastros(){
   `).join('') : '<div class="cad-empty">Nenhuma nuance cadastrada ainda.</div>';
 }
 function salvarCadastroItem(tipo){
+  if(bloquearSeSomenteLeitura()) return;
   const inputId = tipo==='tecido' ? 'novoTecido' : 'novaNuance';
   const input = document.getElementById(inputId);
   const nome = input.value.trim();
@@ -2360,6 +2400,7 @@ function salvarCadastroItem(tipo){
   }
 }
 function removerCadastroItem(tipo, idx){
+  if(bloquearSeSomenteLeitura()) return;
   if(!confirm('Remover este item do cadastro? Cortes já salvos com esse valor não serão alterados.')) return;
   const lista = tipo==='tecido' ? catalogos.tecidos : catalogos.nuances;
   const removido = lista[idx];
@@ -2377,6 +2418,7 @@ function removerCadastroItem(tipo, idx){
   renderListaCadastros();
 }
 function editarCadastroItem(tipo, idx){
+  if(bloquearSeSomenteLeitura()) return;
   const lista = tipo==='tecido' ? catalogos.tecidos : catalogos.nuances;
   const atual = lista[idx];
   if(atual===undefined) return;
@@ -2919,6 +2961,7 @@ function limparForm(){
 }
 
 function salvarCorte(){
+  if(bloquearSeSomenteLeitura()) return;
   const data = document.getElementById('fData').value;
   const modelo = document.getElementById('fModelo').value.trim();
   const referencia = document.getElementById('fReferencia').value.trim();
@@ -3203,6 +3246,7 @@ function editarCorte(id){
 }
 
 function excluirCorte(id){
+  if(bloquearSeSomenteLeitura()) return;
   if(!confirm('Excluir este corte? Essa ação não pode ser desfeita.')) return;
   cortes = cortes.filter(c=>c.id!==id);
   salvarStorage();
@@ -4116,6 +4160,7 @@ function exportBackup(){
 }
 
 function importBackup(event){
+  if(bloquearSeSomenteLeitura()) { event.target.value = ''; return; }
   const file = event.target.files[0];
   if(!file) return;
   const reader = new FileReader();
@@ -4381,11 +4426,36 @@ function carregarSessaoAuth(){
 }
 
 // Mostra/esconde no menu as funções restritas a administrador (hoje: Google
-// Sheets/Drive). Chamada assim que sabemos o papel da pessoa logada.
-function aplicarPermissoesUI(papel){
+// Sheets/Drive), e mostra/esconde o indicador de qual usuário está logado
+// neste aparelho. Chamada assim que sabemos o papel/usuário da pessoa logada.
+function aplicarPermissoesUI(papel, usuario){
+  papelAtual = papel;
   const ehAdmin = papel === 'admin';
   const btnGoogle = document.getElementById('btnMenuGoogleConfig');
   if(btnGoogle) btnGoogle.style.display = ehAdmin ? '' : 'none';
+
+  const label = document.getElementById('usuarioLogadoLabel');
+  const nomeEl = document.getElementById('usuarioLogadoNome');
+  if(label && nomeEl){
+    if(usuario){
+      nomeEl.textContent = usuario + (papel === 'admin' ? ' (admin)' : papel === 'leitura' ? ' (leitura)' : '');
+      label.style.display = '';
+    }else{
+      label.style.display = 'none';
+    }
+  }
+}
+
+// Trava usada pelas funções que gravam/alteram/apagam dados. Se a pessoa logada
+// tiver papel 'leitura', a ação é cancelada e um aviso é mostrado — sem alterar
+// nada na tela, sem apagar formulário preenchido, só impedindo a gravação.
+// Retorna true quando a ação deve ser bloqueada.
+function bloquearSeSomenteLeitura(){
+  if(papelAtual === 'leitura'){
+    mostrarToast('Seu acesso é somente leitura. Fale com o administrador para alterar dados.', true);
+    return true;
+  }
+  return false;
 }
 
 // O link "Configurar servidor" na tela de login só serve pra configurar a URL
@@ -4397,14 +4467,50 @@ function atualizarLinkConfigLogin(){
   if(link) link.style.display = configGoogle.url ? 'none' : '';
 }
 
-// Mostra/esconde a tela de login. Retorna true se já está autenticado hoje.
-function verificarAutenticacao(){
+// Mostra/esconde a tela de login. A sessão salva no navegador é liberada na
+// hora (evita a tela "piscar" à toa), mas em seguida é revalidada junto ao
+// Google — ver validarSessao() no Code.gs. Se o usuário foi bloqueado, teve o
+// papel trocado, ou o limite de aparelhos simultâneos foi atingido por outro
+// aparelho, a sessão local é encerrada e o login é pedido de novo, em vez de
+// confiar cegamente no que já estava salvo aqui. Retorna true se, no momento
+// em que a função termina de rodar a parte síncrona, o acesso está liberado
+// (a confirmação com o Google acontece em seguida, em segundo plano).
+async function verificarAutenticacao(){
   const overlay = document.getElementById('authOverlay');
   atualizarLinkConfigLogin();
   const sessao = carregarSessaoAuth();
   if(sessao){
     overlay.classList.remove('open');
-    aplicarPermissoesUI(sessao.papel);
+    aplicarPermissoesUI(sessao.papel, sessao.usuario);
+
+    if(configGoogle.url){
+      try{
+        const resp = await fetch(configGoogle.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ acao: 'validarSessao', usuario: sessao.usuario, dispositivo: obterDeviceId() })
+        });
+        const resultado = await resp.json();
+        if(resultado && resultado.ok === true){
+          const papel = resultado.papel === 'admin' ? 'admin' : (resultado.papel === 'leitura' ? 'leitura' : 'usuario');
+          localStorage.setItem(AUTH_KEY, JSON.stringify({ usuario: sessao.usuario, data: hojeStrAuth(), papel }));
+          aplicarPermissoesUI(papel, sessao.usuario);
+        }else{
+          // Sessão não é mais válida (bloqueado, limite de aparelhos atingido,
+          // usuário removido etc.): encerra a sessão local e pede login de novo.
+          localStorage.removeItem(AUTH_KEY);
+          aplicarPermissoesUI(null);
+          overlay.classList.add('open');
+          const erroEl = document.getElementById('authErro');
+          if(erroEl) erroEl.textContent = (resultado && resultado.mensagem) || 'Sua sessão não é mais válida. Faça login novamente.';
+        }
+      }catch(err){
+        // Falha de rede ao revalidar (ex: sem internet no momento): mantém a
+        // sessão local liberada, pra não travar o uso do sistema por causa de
+        // uma conexão instável. A checagem volta a valer normalmente assim
+        // que a internet estiver de volta e o sistema for reaberto.
+      }
+    }
     return true;
   }
   aplicarPermissoesUI(null);
@@ -4446,9 +4552,9 @@ async function tentarLogin(){
     const resultado = await resp.json();
 
     if(resultado && resultado.ok === true){
-      const papel = resultado.papel === 'admin' ? 'admin' : 'usuario';
+      const papel = resultado.papel === 'admin' ? 'admin' : (resultado.papel === 'leitura' ? 'leitura' : 'usuario');
       localStorage.setItem(AUTH_KEY, JSON.stringify({ usuario, data: hojeStrAuth(), papel }));
-      aplicarPermissoesUI(papel);
+      aplicarPermissoesUI(papel, usuario);
       document.getElementById('authOverlay').classList.remove('open');
       senhaEl.value = '';
       mostrarToast('Bem-vindo(a), ' + (resultado.nome || usuario) + '!');
