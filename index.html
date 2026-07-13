@@ -4505,10 +4505,16 @@ async function verificarAutenticacao(){
           if(erroEl) erroEl.textContent = (resultado && resultado.mensagem) || 'Sua sessão não é mais válida. Faça login novamente.';
         }
       }catch(err){
-        // Falha de rede ao revalidar (ex: sem internet no momento): mantém a
-        // sessão local liberada, pra não travar o uso do sistema por causa de
-        // uma conexão instável. A checagem volta a valer normalmente assim
-        // que a internet estiver de volta e o sistema for reaberto.
+        // Falha ao revalidar (erro de rede, CORS, implantação incorreta etc.):
+        // por segurança, NÃO deixa passar silenciosamente. Encerra a sessão
+        // local e exige login de novo, mostrando o motivo pra não mascarar
+        // problemas de configuração como se fosse "acesso liberado".
+        localStorage.removeItem(AUTH_KEY);
+        aplicarPermissoesUI(null);
+        overlay.classList.add('open');
+        const erroEl = document.getElementById('authErro');
+        if(erroEl) erroEl.textContent = 'Não foi possível confirmar sua sessão com o servidor (' + (err && err.message ? err.message : 'erro desconhecido') + '). Faça login novamente.';
+        return false;
       }
     }
     return true;
