@@ -1408,13 +1408,40 @@
           <li><b>limite</b> — quantos <b>aparelhos diferentes</b> podem estar logados com esse mesmo
             usuário/senha <b>ao mesmo tempo</b>, no mesmo dia. Ex: <code>2</code> permite até 2 celulares/tablets
             usando esse login ao mesmo tempo; o 3º aparelho que tentar entrar é recusado até que um dos dois pare
-            de usar. Deixe em branco (ou <code>0</code>) para não ter limite nenhum.</li>
+            de usar. Deixe em branco (ou <code>0</code>) para não ter limite nenhum. Se você reduzir esse número
+            depois, os aparelhos que entraram por último (além do novo limite) perdem o acesso no próximo
+            login/checagem deles.</li>
+          <li><b>validoAte</b> — usada pra dar um <b>período de teste</b> a um cliente, com data de validade. Escreva
+            uma data no formato <code>dd/mm/aaaa</code> (ex: <code>31/12/2026</code>): a partir do dia seguinte a
+            essa data, o acesso é recusado sozinho, sem você precisar fazer nada. Deixe em branco para "sem
+            validade" (acesso não expira sozinho) — é o caso normal de um cliente já efetivado.</li>
           <li><b>nome</b> — nome da pessoa, só pra você identificar (opcional).</li>
         </ul>
         <p class="help-text">
           As colunas <code>criadoEm</code> e <code>ultimoAcesso</code> não precisam ser preenchidas por você — a
           coluna <code>ultimoAcesso</code> é atualizada sozinha pelo sistema a cada login bem-sucedido, pra você
           acompanhar quem andou usando e quando.
+        </p>
+        <h4>Dar um período de teste a um cliente (com expiração automática)</h4>
+        <p>
+          Preencha a coluna <b>validoAte</b> daquela linha com a última data em que o teste deve valer (ex:
+          <code>15/08/2026</code>). A partir do dia seguinte, o sistema recusa o acesso automaticamente daquele
+          usuário, mostrando o aviso de período de teste expirado — sem você precisar lembrar de bloquear
+          manualmente. Isso é checado tanto no login quanto na revalidação periódica (veja abaixo), então o corte
+          acontece mesmo que a pessoa já estivesse com o sistema aberto no momento em que a validade vence.
+        </p>
+        <p class="help-text">
+          Para <b>efetivar o cliente</b> (ele virou cliente de verdade, sem mais prazo de teste): simplesmente
+          apague o conteúdo da célula <code>validoAte</code> daquela linha, deixando em branco. A partir daí, o
+          acesso passa a valer normalmente, sem data de validade.
+        </p>
+        <h4>Derrubar um cliente à força (ex: atraso de pagamento)</h4>
+        <p>
+          Mude o <b>status</b> daquela linha de <code>ativo</code> para <code>bloqueado</code> (ou qualquer outra
+          palavra). Não precisa apagar a linha nem mexer na validade ou na senha. O sistema confere isso com o
+          Google toda vez que é aberto, <b>e também a cada poucos minutos enquanto o sistema já está aberto</b>
+          (veja "Revalidação automática" logo abaixo) — então o corte de acesso acontece rapidamente, mesmo que
+          a pessoa esteja usando o sistema naquele exato momento, sem precisar esperar ela fechar e abrir de novo.
         </p>
         <h4>O que o papel "leitura" pode e não pode fazer</h4>
         <p>
@@ -1430,27 +1457,34 @@
           Cada aparelho (celular, tablet, computador) gera sozinho um identificador único na primeira vez que abre
           o sistema, e manda esse identificador junto com o login. O script guarda automaticamente, numa aba
           própria chamada <b>"Sessoes_Dispositivos"</b> (você não precisa mexer nela), quais aparelhos usaram cada
-          login <b>hoje</b>. Um aparelho que já usou aquele login hoje sempre pode entrar de novo; um aparelho novo
-          só entra se ainda não tiver batido no número definido em <code>limite</code>. No dia seguinte, a "vaga"
-          libera sozinha — cada aparelho pede login de novo, do jeito que o sistema já funciona hoje.
+          login <b>hoje</b>, na ordem em que entraram. Um aparelho que já usou aquele login hoje continua podendo
+          entrar de novo, desde que ainda esteja dentro do limite atual (contando pela ordem de chegada: quem
+          entrou primeiro tem prioridade); um aparelho novo só entra se ainda não tiver batido no número definido
+          em <code>limite</code>. No dia seguinte, a "vaga" libera sozinha — cada aparelho pede login de novo, do
+          jeito que o sistema já funciona hoje.
         </p>
         <h4>Como bloquear uma pessoa</h4>
         <p>
           Na mesma aba, mude o <b>status</b> daquela linha de <code>ativo</code> para <code>bloqueado</code> (ou
           qualquer outra palavra — só <code>ativo</code> libera acesso). Não precisa apagar a linha nem mudar a
-          senha. O sistema confere isso com o Google toda vez que é aberto (não só uma vez por dia), então o
-          bloqueio passa a valer quase na hora, mesmo que a pessoa já estivesse com o sistema aberto.
+          senha. O sistema confere isso com o Google toda vez que é aberto e periodicamente enquanto já está
+          aberto, então o bloqueio passa a valer rapidamente, mesmo que a pessoa já estivesse com o sistema aberto.
         </p>
         <h4>Revalidação automática da sessão</h4>
         <p>
           Toda vez que o sistema é aberto num aparelho que já tinha feito login antes, ele confirma com o Google,
-          em segundo plano, se aquela sessão ainda é válida (usuário não bloqueado, papel atual, e dentro do
-          limite de aparelhos simultâneos) — em vez de simplesmente confiar no que já estava salvo no navegador o
-          dia inteiro. Se algo mudou (por exemplo, você bloqueou a pessoa ou o limite de aparelhos foi atingido em
-          outro aparelho), o acesso é encerrado ali mesmo e a tela de login aparece de novo. Isso exige uma conexão
-          com a internet a cada abertura do sistema; se não houver internet no momento, o sistema mantém a sessão
-          que já estava aberta (pra não travar o uso), e a conferência volta a valer normalmente assim que a
-          conexão for restabelecida.
+          em segundo plano, se aquela sessão ainda é válida (status, validade do teste, papel atual, e limite de
+          aparelhos simultâneos) — em vez de simplesmente confiar no que já estava salvo no navegador o dia
+          inteiro. Além disso, essa mesma confirmação se repete sozinha <b>a cada 10 minutos</b> enquanto o
+          sistema continuar aberto, mesmo sem a pessoa recarregar a página. Se algo mudou nesse meio-tempo (por
+          exemplo, você bloqueou a pessoa, o teste dela expirou, ou o limite de aparelhos foi atingido em outro
+          aparelho), o acesso é encerrado ali mesmo e a tela de login aparece de novo — é assim que um bloqueio
+          por atraso de pagamento, por exemplo, "derruba" alguém mesmo que já estivesse usando o sistema.
+        </p>
+        <p class="help-text">
+          Isso exige conexão com a internet: se a confirmação falhar por qualquer motivo (sem internet, problema
+          na implantação do script etc.), o sistema não deixa passar — encerra a sessão e pede login de novo,
+          mostrando o motivo do erro na tela.
         </p>
         <p class="help-text">
           Para você conferir com quem está logado em cada aparelho, o nome do usuário aparece no topo da tela,
@@ -4475,6 +4509,77 @@ function atualizarLinkConfigLogin(){
 // confiar cegamente no que já estava salvo aqui. Retorna true se, no momento
 // em que a função termina de rodar a parte síncrona, o acesso está liberado
 // (a confirmação com o Google acontece em seguida, em segundo plano).
+// Revalida, junto ao Google, a sessão salva neste navegador — usada tanto ao
+// abrir o sistema quanto periodicamente enquanto ele já está aberto (veja
+// iniciarChecagemPeriodicaDeSessao() logo abaixo). Se a sessão não for mais
+// válida (bloqueada, teste expirado, limite de aparelhos atingido etc.),
+// encerra o acesso na hora — inclusive derrubando alguém que já estava com o
+// sistema aberto, sem precisar esperar a próxima vez que abrir a página.
+async function revalidarSessaoComGoogle(sessao){
+  if(!configGoogle.url) return true; // sem servidor configurado, não há como revalidar
+  const overlay = document.getElementById('authOverlay');
+  try{
+    const resp = await fetch(configGoogle.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ acao: 'validarSessao', usuario: sessao.usuario, dispositivo: obterDeviceId() })
+    });
+    const resultado = await resp.json();
+    if(resultado && resultado.ok === true){
+      const papel = resultado.papel === 'admin' ? 'admin' : (resultado.papel === 'leitura' ? 'leitura' : 'usuario');
+      localStorage.setItem(AUTH_KEY, JSON.stringify({ usuario: sessao.usuario, data: hojeStrAuth(), papel }));
+      aplicarPermissoesUI(papel, sessao.usuario);
+      return true;
+    }
+    // Sessão não é mais válida (bloqueado, teste expirado, limite de
+    // aparelhos atingido, usuário removido etc.): encerra a sessão local e
+    // pede login de novo — mesmo que o sistema já estivesse aberto e em uso.
+    localStorage.removeItem(AUTH_KEY);
+    aplicarPermissoesUI(null);
+    if(overlay) overlay.classList.add('open');
+    const erroEl = document.getElementById('authErro');
+    if(erroEl) erroEl.textContent = (resultado && resultado.mensagem) || 'Sua sessão não é mais válida. Faça login novamente.';
+    return false;
+  }catch(err){
+    // Falha ao revalidar (erro de rede, CORS, implantação incorreta etc.):
+    // por segurança, NÃO deixa passar silenciosamente. Encerra a sessão local
+    // e exige login de novo, mostrando o motivo pra não mascarar problemas de
+    // configuração como se fosse "acesso liberado".
+    localStorage.removeItem(AUTH_KEY);
+    aplicarPermissoesUI(null);
+    if(overlay) overlay.classList.add('open');
+    const erroEl = document.getElementById('authErro');
+    if(erroEl) erroEl.textContent = 'Não foi possível confirmar sua sessão com o servidor (' + (err && err.message ? err.message : 'erro desconhecido') + '). Faça login novamente.';
+    return false;
+  }
+}
+
+let intervaloChecagemSessao = null;
+const INTERVALO_CHECAGEM_SESSAO_MS = 10 * 60 * 1000; // reconfirma a cada 10 minutos
+
+// Mantém uma checagem rodando em segundo plano, a cada poucos minutos,
+// enquanto o sistema estiver aberto. É o que faz um bloqueio manual (status
+// "bloqueado", ou o fim de um período de teste em "validoAte") derrubar
+// alguém que já estava usando o sistema naquele momento, em vez de esperar a
+// pessoa fechar e abrir a aba de novo.
+function iniciarChecagemPeriodicaDeSessao(){
+  if(intervaloChecagemSessao) return; // já está rodando, não duplica
+  intervaloChecagemSessao = setInterval(async () => {
+    const sessaoAtual = carregarSessaoAuth();
+    if(!sessaoAtual){
+      clearInterval(intervaloChecagemSessao);
+      intervaloChecagemSessao = null;
+      return;
+    }
+    await revalidarSessaoComGoogle(sessaoAtual);
+  }, INTERVALO_CHECAGEM_SESSAO_MS);
+}
+
+// Mostra/esconde a tela de login. A sessão salva no navegador é liberada na
+// hora (evita a tela "piscar" à toa), mas em seguida é revalidada junto ao
+// Google — ver revalidarSessaoComGoogle() acima e validarSessao() no Code.gs.
+// Se a revalidação passar, deixa uma checagem periódica rodando em segundo
+// plano pelo resto da sessão (veja iniciarChecagemPeriodicaDeSessao()).
 async function verificarAutenticacao(){
   const overlay = document.getElementById('authOverlay');
   atualizarLinkConfigLogin();
@@ -4482,42 +4587,9 @@ async function verificarAutenticacao(){
   if(sessao){
     overlay.classList.remove('open');
     aplicarPermissoesUI(sessao.papel, sessao.usuario);
-
-    if(configGoogle.url){
-      try{
-        const resp = await fetch(configGoogle.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ acao: 'validarSessao', usuario: sessao.usuario, dispositivo: obterDeviceId() })
-        });
-        const resultado = await resp.json();
-        if(resultado && resultado.ok === true){
-          const papel = resultado.papel === 'admin' ? 'admin' : (resultado.papel === 'leitura' ? 'leitura' : 'usuario');
-          localStorage.setItem(AUTH_KEY, JSON.stringify({ usuario: sessao.usuario, data: hojeStrAuth(), papel }));
-          aplicarPermissoesUI(papel, sessao.usuario);
-        }else{
-          // Sessão não é mais válida (bloqueado, limite de aparelhos atingido,
-          // usuário removido etc.): encerra a sessão local e pede login de novo.
-          localStorage.removeItem(AUTH_KEY);
-          aplicarPermissoesUI(null);
-          overlay.classList.add('open');
-          const erroEl = document.getElementById('authErro');
-          if(erroEl) erroEl.textContent = (resultado && resultado.mensagem) || 'Sua sessão não é mais válida. Faça login novamente.';
-        }
-      }catch(err){
-        // Falha ao revalidar (erro de rede, CORS, implantação incorreta etc.):
-        // por segurança, NÃO deixa passar silenciosamente. Encerra a sessão
-        // local e exige login de novo, mostrando o motivo pra não mascarar
-        // problemas de configuração como se fosse "acesso liberado".
-        localStorage.removeItem(AUTH_KEY);
-        aplicarPermissoesUI(null);
-        overlay.classList.add('open');
-        const erroEl = document.getElementById('authErro');
-        if(erroEl) erroEl.textContent = 'Não foi possível confirmar sua sessão com o servidor (' + (err && err.message ? err.message : 'erro desconhecido') + '). Faça login novamente.';
-        return false;
-      }
-    }
-    return true;
+    const aindaValida = await revalidarSessaoComGoogle(sessao);
+    if(aindaValida) iniciarChecagemPeriodicaDeSessao();
+    return aindaValida;
   }
   aplicarPermissoesUI(null);
   overlay.classList.add('open');
@@ -4564,10 +4636,13 @@ async function tentarLogin(){
       document.getElementById('authOverlay').classList.remove('open');
       senhaEl.value = '';
       mostrarToast('Bem-vindo(a), ' + (resultado.nome || usuario) + '!');
+      iniciarChecagemPeriodicaDeSessao();
     } else if(resultado && resultado.motivo === 'bloqueado'){
       erroEl.textContent = 'Acesso bloqueado. Fale com o responsável pelo sistema.';
     } else if(resultado && resultado.motivo === 'limite'){
       erroEl.textContent = 'Limite de aparelhos conectados com esse usuário foi atingido. Fale com o administrador.';
+    } else if(resultado && resultado.motivo === 'teste_expirado'){
+      erroEl.textContent = (resultado && resultado.mensagem) || 'Seu período de teste expirou. Fale com o responsável.';
     } else {
       erroEl.textContent = (resultado && resultado.mensagem) || 'Usuário ou senha incorretos.';
     }
@@ -4582,6 +4657,7 @@ async function tentarLogin(){
 function sair(){
   if(!confirm('Deseja sair? Será preciso autenticar novamente para usar o sistema.')) return;
   localStorage.removeItem(AUTH_KEY);
+  if(intervaloChecagemSessao){ clearInterval(intervaloChecagemSessao); intervaloChecagemSessao = null; }
   document.getElementById('authUsuario').value = '';
   document.getElementById('authSenha').value = '';
   verificarAutenticacao();
