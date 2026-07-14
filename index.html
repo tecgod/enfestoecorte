@@ -4654,13 +4654,28 @@ async function tentarLogin(){
   }
 }
 
-function sair(){
+async function sair(){
   if(!confirm('Deseja sair? Será preciso autenticar novamente para usar o sistema.')) return;
+  const sessao = carregarSessaoAuth();
   localStorage.removeItem(AUTH_KEY);
   if(intervaloChecagemSessao){ clearInterval(intervaloChecagemSessao); intervaloChecagemSessao = null; }
   document.getElementById('authUsuario').value = '';
   document.getElementById('authSenha').value = '';
   verificarAutenticacao();
+  // Avisa o backend que este aparelho saiu, pra liberar a vaga no limite de
+  // aparelhos simultâneos na hora, sem esperar a janela de inatividade
+  // expirar sozinha. Roda depois da UI já ter voltado pra tela de login, e
+  // se falhar (sem internet, etc.) não trava nada — a vaga ainda vai se
+  // liberar sozinha pela inatividade.
+  if(sessao && configGoogle.url){
+    try{
+      await fetch(configGoogle.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ acao: 'logout', usuario: sessao.usuario, dispositivo: obterDeviceId() })
+      });
+    }catch(e){ /* sem problema: a vaga expira sozinha pela inatividade */ }
+  }
 }
 
 // init
