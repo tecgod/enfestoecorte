@@ -4657,25 +4657,34 @@ async function tentarLogin(){
 async function sair(){
   if(!confirm('Deseja sair? Será preciso autenticar novamente para usar o sistema.')) return;
   const sessao = carregarSessaoAuth();
+
+  // Avisa o backend ANTES de trocar a tela, pra liberar a vaga deste
+  // aparelho no limite de aparelhos simultâneos. Usa navigator.sendBeacon
+  // quando disponível: diferente de fetch(), o sendBeacon é feito pra
+  // "avisos de saída" e continua sendo entregue mesmo que a aba feche ou a
+  // pessoa saia do navegador logo em seguida — um fetch normal nesse
+  // momento corre risco de ser cancelado antes de chegar no servidor.
+  if(sessao && configGoogle.url){
+    const corpoLogout = JSON.stringify({ acao: 'logout', usuario: sessao.usuario, dispositivo: obterDeviceId() });
+    try{
+      if(navigator.sendBeacon){
+        navigator.sendBeacon(configGoogle.url, new Blob([corpoLogout], { type: 'text/plain;charset=UTF-8' }));
+      } else {
+        await fetch(configGoogle.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: corpoLogout,
+          keepalive: true
+        });
+      }
+    }catch(e){ /* sem problema: a vaga expira sozinha pela inatividade */ }
+  }
+
   localStorage.removeItem(AUTH_KEY);
   if(intervaloChecagemSessao){ clearInterval(intervaloChecagemSessao); intervaloChecagemSessao = null; }
   document.getElementById('authUsuario').value = '';
   document.getElementById('authSenha').value = '';
   verificarAutenticacao();
-  // Avisa o backend que este aparelho saiu, pra liberar a vaga no limite de
-  // aparelhos simultâneos na hora, sem esperar a janela de inatividade
-  // expirar sozinha. Roda depois da UI já ter voltado pra tela de login, e
-  // se falhar (sem internet, etc.) não trava nada — a vaga ainda vai se
-  // liberar sozinha pela inatividade.
-  if(sessao && configGoogle.url){
-    try{
-      await fetch(configGoogle.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ acao: 'logout', usuario: sessao.usuario, dispositivo: obterDeviceId() })
-      });
-    }catch(e){ /* sem problema: a vaga expira sozinha pela inatividade */ }
-  }
 }
 
 // init
