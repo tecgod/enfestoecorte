@@ -4654,8 +4654,29 @@ async function tentarLogin(){
   }
 }
 
-function sair(){
+async function sair(){
   if(!confirm('Deseja sair? Será preciso autenticar novamente para usar o sistema.')) return;
+
+  const sessao = carregarSessaoAuth();
+
+  // Avisa o Google Apps Script para liberar AGORA a vaga deste aparelho no
+  // limite de aparelhos simultâneos (em vez de só expirar à meia-noite no
+  // servidor). Feito antes de limpar o login local; se falhar (sem internet,
+  // por exemplo), a saída deste aparelho continua acontecendo normalmente —
+  // só a liberação da vaga no servidor é que pode demorar até o fim do dia.
+  if(sessao && sessao.usuario && configGoogle.url){
+    try{
+      await fetch(configGoogle.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ acao: 'logout', usuario: sessao.usuario, dispositivo: obterDeviceId() })
+      });
+    }catch(e){
+      // Sem internet ou falha no servidor: ainda assim deixa o usuário sair
+      // deste aparelho normalmente. A vaga é liberada mais tarde, sozinha.
+    }
+  }
+
   localStorage.removeItem(AUTH_KEY);
   if(intervaloChecagemSessao){ clearInterval(intervaloChecagemSessao); intervaloChecagemSessao = null; }
   document.getElementById('authUsuario').value = '';
